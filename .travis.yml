@@ -15,22 +15,22 @@ addons:
 env:
   matrix:
     - TEST_SUITE=iam
-    - TEST_SUITE=s3 # Latest stable/supported versions
-    - TEST_SUITE=s3 SDS_BRANCH=master  # Integration with latest versions
-    - TEST_SUITE=s3 SDS_BRANCH=5.x # Previous versions
+    # - TEST_SUITE=s3 # Latest stable/supported versions
+    # - TEST_SUITE=s3 SDS_BRANCH=master  # Integration with latest versions
+    # - TEST_SUITE=s3 SDS_BRANCH=5.x # Previous versions
     - TEST_SUITE=s3 SDS_BRANCH=5.x SWIFT_BRANCH=stable/rocky # Previous versions with Rocky
-    - TEST_SUITE=encryption
-    - TEST_SUITE=encryption SDS_BRANCH=master
-    - TEST_SUITE=encryption SDS_BRANCH=5.x
+    # - TEST_SUITE=encryption
+    # - TEST_SUITE=encryption SDS_BRANCH=master
+    # - TEST_SUITE=encryption SDS_BRANCH=5.x
     - TEST_SUITE=encryption SDS_BRANCH=5.x SWIFT_BRANCH=stable/rocky
-    - TEST_SUITE=swift
-    - TEST_SUITE=swift SDS_BRANCH=5.x
+    # - TEST_SUITE=swift
+    # - TEST_SUITE=swift SDS_BRANCH=5.x
     - TEST_SUITE=swift SDS_BRANCH=5.x SWIFT_BRANCH=stable/rocky
-    - TEST_SUITE=ns-wide-versioning
-    - TEST_SUITE=ns-wide-versioning SDS_BRANCH=5.x
+    # - TEST_SUITE=ns-wide-versioning
+    # - TEST_SUITE=ns-wide-versioning SDS_BRANCH=5.x
     - TEST_SUITE=ns-wide-versioning SDS_BRANCH=5.x SWIFT_BRANCH=stable/rocky
-    - TEST_SUITE=unit
-    - TEST_SUITE=unit SDS_BRANCH=5.x
+    # - TEST_SUITE=unit
+    # - TEST_SUITE=unit SDS_BRANCH=5.x
     - TEST_SUITE=unit SDS_BRANCH=5.x SWIFT_BRANCH=stable/rocky
 
 before_install:
@@ -46,7 +46,9 @@ install:
   - test -n "$SWIFT3_BRANCH" && git config --local submodule.third_party/swift3.branch "$SWIFT3_BRANCH" || true
   - test -n "$SDS_BRANCH" && git config --local submodule.third_party/oio-sds.branch "$SDS_BRANCH" || true
   - git submodule update --init --remote
-  - ( grep -v -e PyECLib -e six -e "\<xattr\>" -e ZooKeeper third_party/oio-sds/all-requirements.txt ; grep -v eventlet third_party/swift/requirements.txt ) > deps-requirements.txt
+  - ( grep -v -e PyECLib -e six -e "\<xattr\>" -e ZooKeeper third_party/oio-sds/all-requirements.txt ; grep -vE eventlet third_party/swift/requirements.txt ) > deps-requirements.txt
+  - test "$SWIFT_BRANCH" = "stable/rocky" && sed -i '/lxml>=3.4.1/d' deps-requirements.txt || true
+  - test "$SWIFT_BRANCH" = "stable/rocky" && sed -i '/requests>=2.14.2/d' deps-requirements.txt || true
   - pip install --upgrade -r deps-requirements.txt
   - cd third_party/oio-sds && python setup.py install && cd ../..
   - cd third_party/swift && python setup.py install && cd ../..
